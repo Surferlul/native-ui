@@ -11,17 +11,28 @@ class Container(abstract.Container):
         super().__init__(*args, **kwargs, platform=platform)
 
     def changed_gnome(self, property_name: str, index: int = None):
-        pass
+        match property_name:
+            case "layout": self.set_layout_gnome()
+            case "children": self.set_children_gnome()
 
     def called_gnome(self, property_name: str, res: Any, *args, **kwargs):
-        if property_name == "add_child":
-            self.native.append(args[0].build())
+        match property_name:
+            case "add_child": self.native.append(args[0].build())
+            case "pop_child": self.native.remove(res.native)
+
+    def set_layout_gnome(self):
+        if self.layout is not None:
+            match self.layout:
+                case abstract.Layout.HORIZONTAL: self.native.set_orientation(Gtk.Orientation.HORIZONTAL)
+                case abstract.Layout.VERTICAL: self.native.set_orientation(Gtk.Orientation.VERTICAL)
+
+    def set_children_gnome(self):
+        for child in self.children:
+            self.native.append(child.build())
+
 
     def build_gnome(self):
-        orientation = Gtk.Orientation.VERTICAL
-        if self.layout == abstract.Layout.HORIZONTAL:
-            orientation = Gtk.Orientation.HORIZONTAL
-        self.native = Gtk.Box(orientation=orientation)
-        for child in self.call("get_children"):
-            self.native.append(child.build())
+        self.native = Gtk.Box()
+        self.set_layout_gnome()
+        self.set_children_gnome()
         return self.native

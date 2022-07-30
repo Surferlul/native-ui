@@ -4,8 +4,8 @@ from typing import Callable
 
 class Button(Abstract):
     def __init__(self,
-                 label: str = "",
-                 pressed: Callable = lambda button: None,
+                 label: str = None,
+                 pressed: Callable = lambda *args, **kwargs: None,
                  pressed_args: list = None,
                  pressed_kwargs: dict = None,
                  platform: str = None):
@@ -16,8 +16,8 @@ class Button(Abstract):
             pressed_args = []
         if pressed_kwargs is None:
             pressed_kwargs = {}
-        self._pressed_args = pressed_args
-        self._pressed_kwargs = pressed_kwargs
+        self.pressed_args = pressed_args
+        self.pressed_kwargs = pressed_kwargs
 
     @abstract_property
     def label(self, value):
@@ -27,19 +27,5 @@ class Button(Abstract):
     def pressed(self, value):
         self._pressed = value
 
-    @abstract_property
-    def pressed_args(self, value):
-        self._pressed_args = value
-
-    def add_pressed_arg(self, value):
-        self._pressed_args.append(value)
-
-    @abstract_property
-    def pressed_kwargs(self, value):
-        self._pressed_kwargs = value
-
-    def set_pressed_kwarg(self, key, value):
-        self._pressed_kwargs[key] = value
-
     def press(self, *args, **kwargs):
-        self.call("pressed", *args, *self._pressed_args, **kwargs, **self._pressed_kwargs)
+        self.call("pressed", self, *args, *self.pressed_args, **kwargs, **self.pressed_kwargs)

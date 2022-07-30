@@ -20,6 +20,14 @@ def abstract_property(function: Callable):
     return property(fget, fset)
 
 
+def abstract_method(function: Callable):
+    def wrapper(self, *args, **kwargs):
+        res = function(self, *args, **kwargs)
+        self.called(function.__name__, res, *args, **kwargs)
+
+    return wrapper
+
+
 class Abstract(object):
     def __init__(self, platform: str = None):
         self.is_builder = False
@@ -28,6 +36,14 @@ class Abstract(object):
         if platform is not None:
             self.supported_platforms.add(platform)
         self.native = None
+        if not hasattr(self, "runtime_data"):
+            self.runtime_data = {}
+        if not hasattr(self, "update"):
+            self._update = lambda *args, **kwargs: None
+        if not hasattr(self, "update_args"):
+            self.update_args = []
+        if not hasattr(self, "update_kwargs"):
+            self.update_kwargs = {}
 
     def set(self, **kwargs):
         for prop in kwargs:
@@ -65,6 +81,17 @@ class Abstract(object):
         if self.native is not None:
             return self.native
         return self.native_call("build", *args, **kwargs)
+
+    @property
+    def update(self):
+        def f(*args, **kwargs):
+            self.call("_update", self, *args, *self.update_args, **kwargs, **self.update_kwargs)
+
+        return f
+
+    @update.setter
+    def update(self, value):
+        self._update = value
 
     class __metaclass__(type):
         __inheritors__ = defaultdict(list)

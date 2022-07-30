@@ -12,10 +12,15 @@ class Application(abstract.Application):
         super().__init__(*args, **kwargs, platform=platform)
 
     def changed_gnome(self, property_name: str, index: int = None):
-        pass
+        match property_name:
+            case "window": self.set_window_gnome()
 
     def called_gnome(self, property_name: str, res: Any, *args, **kwargs):
         pass
+
+    def set_window_gnome(self):
+        if self.window is not None:
+            self.native.abstract_window = self.window
 
     def build_gnome(self):
         class GnomeApp(Adw.Application):
@@ -34,8 +39,7 @@ class Application(abstract.Application):
                 self.window.present()
 
         self.native = GnomeApp(application_id=gnome.application_id)
-        if self.window is not None:
-            self.native.abstract_window = self.window
+        self.set_window_gnome()
         return self.native
 
     def run_gnome(self, *args, **kwargs):

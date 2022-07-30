@@ -11,15 +11,21 @@ class Button(abstract.Button):
         super().__init__(*args, **kwargs, platform=platform)
 
     def changed_gnome(self, property_name: str, index: int = None):
-        pass
+        match property_name:
+            case "label": self.set_label_gnome()
 
     def called_gnome(self, property_name: str, res: Any, *args, **kwargs):
         pass
 
+    def set_label_gnome(self):
+        if self.label is not None:
+            self.native.set_label(self.label)
+
     def clicked(self, _native_button):
-        self.call("press", self)
+        self.call("press")
 
     def build_gnome(self):
-        self.native = Gtk.Button(label=self.label)
+        self.native = Gtk.Button()
         self.native.connect('clicked', self.clicked)
+        self.set_label_gnome()
         return self.native
